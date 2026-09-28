@@ -1,0 +1,2371 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Driverless Car Simulator</title>
+
+<style>
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+}
+
+body{
+    font-family:Arial,Helvetica,sans-serif;
+    background:#111;
+    overflow:hidden;
+}
+
+#game{
+    width:100vw;
+    height:100vh;
+    position:relative;
+    overflow:hidden;
+    background:#87ceeb;
+}
+
+/* =========================
+   LANGIT
+========================= */
+.sky{
+    position:absolute;
+    inset:0 0 43% 0;
+    background:linear-gradient(#66c7f5,#c9efff);
+}
+
+.cloud{
+    position:absolute;
+    width:130px;
+    height:40px;
+    background:rgba(255,255,255,.8);
+    border-radius:50px;
+}
+
+.cloud:before,
+.cloud:after{
+    content:"";
+    position:absolute;
+    background:inherit;
+    border-radius:50%;
+}
+
+.cloud:before{
+    width:55px;
+    height:55px;
+    left:25px;
+    top:-25px;
+}
+
+.cloud:after{
+    width:70px;
+    height:70px;
+    right:20px;
+    top:-35px;
+}
+
+.c1{left:8%;top:12%}
+.c2{left:62%;top:17%;transform:scale(.8)}
+.c3{left:38%;top:5%;transform:scale(.6)}
+
+/* =========================
+   KOTA
+========================= */
+.city{
+    position:absolute;
+    left:0;
+    right:0;
+    bottom:40%;
+    height:115px;
+    display:flex;
+    align-items:flex-end;
+    gap:8px;
+    padding:0 15px;
+}
+
+.building{
+    background:#7d8a92;
+    width:70px;
+    height:80px;
+}
+
+.building:nth-child(2){height:110px;width:85px;background:#687780}
+.building:nth-child(3){height:65px;width:60px;background:#8e999f}
+.building:nth-child(4){height:95px;width:75px;background:#717d84}
+.building:nth-child(5){height:125px;width:90px;background:#5d6b73}
+.building:nth-child(6){height:75px;width:65px;background:#8a959b}
+.building:nth-child(7){height:105px;width:80px;background:#65737a}
+.building:nth-child(8){height:70px;width:70px;background:#77858c}
+.building:nth-child(9){height:115px;width:85px;background:#64727a}
+
+/* =========================
+   POHON
+========================= */
+.tree{
+    position:absolute;
+    bottom:39%;
+    width:25px;
+    height:75px;
+    background:#654321;
+}
+
+.tree:before{
+    content:"";
+    position:absolute;
+    width:75px;
+    height:75px;
+    border-radius:50%;
+    background:#2f7d32;
+    left:-25px;
+    top:-55px;
+}
+
+.tree1{left:5%}
+.tree2{left:87%;transform:scale(.8)}
+.tree3{left:20%;transform:scale(.65)}
+
+/* =========================
+   JALAN
+========================= */
+.road{
+    position:absolute;
+    left:17%;
+    right:17%;
+    bottom:0;
+    height:61%;
+    background:#45494d;
+    clip-path:polygon(32% 0,68% 0,100% 100%,0 100%);
+    overflow:hidden;
+}
+
+.laneContainer{
+    position:absolute;
+    inset:0;
+}
+
+.lane{
+    position:absolute;
+    width:8px;
+    height:55px;
+    background:#fff;
+    left:50%;
+    transform:translateX(-50%);
+    border-radius:3px;
+}
+
+.sidewalk{
+    position:absolute;
+    bottom:0;
+    height:61%;
+    width:17%;
+    background:#aaa;
+}
+
+.sidewalk.left{left:0}
+.sidewalk.right{right:0}
+
+.sideLine{
+    position:absolute;
+    bottom:0;
+    width:10px;
+    height:61%;
+    background:#eee;
+}
+
+.sideLine.left{left:16.5%}
+.sideLine.right{right:16.5%}
+
+/* =========================
+   PERSIMPANGAN
+========================= */
+.intersection{
+    position:absolute;
+    left:14%;
+    right:14%;
+    height:145px;
+    bottom:47%;
+    background:#3f4346;
+    opacity:0;
+    z-index:5;
+}
+
+.zebra{
+    position:absolute;
+    left:19%;
+    right:19%;
+    bottom:44%;
+    height:45px;
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    opacity:0;
+    z-index:8;
+}
+
+.zebra div{
+    height:6px;
+    background:#fff;
+}
+
+/* =========================
+   LAMPU LALU LINTAS
+========================= */
+.traffic{
+    position:absolute;
+    right:9%;
+    bottom:42%;
+    width:75px;
+    height:270px;
+    z-index:30;
+    opacity:0;
+}
+
+.trafficBox{
+    position:absolute;
+    top:0;
+    left:10px;
+    width:55px;
+    height:145px;
+    background:#202225;
+    border:5px solid #111;
+    border-radius:10px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:space-around;
+}
+
+.trafficPole{
+    position:absolute;
+    top:140px;
+    left:34px;
+    width:9px;
+    height:130px;
+    background:#202020;
+}
+
+.trafficPole:after{
+    content:"";
+    position:absolute;
+    width:60px;
+    height:9px;
+    background:#202020;
+    bottom:0;
+    left:-25px;
+}
+
+.bulb{
+    width:30px;
+    height:30px;
+    border-radius:50%;
+    opacity:.22;
+}
+
+.bulb.red{background:#ff2c2c}
+.bulb.yellow{background:#ffd42a}
+.bulb.green{background:#24df5d}
+
+.bulb.active{
+    opacity:1;
+    box-shadow:0 0 22px currentColor;
+}
+
+/* =========================
+   MOBIL LAIN
+========================= */
+.otherCar{
+    position:absolute;
+    width:75px;
+    height:125px;
+    background:#2865b3;
+    border-radius:15px;
+    bottom:45%;
+    left:56%;
+    z-index:12;
+    transform:scale(.55);
+}
+
+.otherCar:before{
+    content:"";
+    position:absolute;
+    top:18px;
+    left:10px;
+    width:55px;
+    height:38px;
+    background:#a9d3e8;
+    border-radius:8px;
+}
+
+/* =========================
+   INTERIOR MOBIL
+========================= */
+.interior{
+    position:absolute;
+    inset:0;
+    z-index:50;
+    pointer-events:none;
+}
+
+.dashboard{
+    position:absolute;
+    left:0;
+    right:0;
+    bottom:0;
+    height:31%;
+    background:linear-gradient(#25272a,#101112);
+    border-top:5px solid #3b3d40;
+    border-radius:50% 50% 0 0 / 18% 18% 0 0;
+}
+
+/* ==================================================
+   KURSI PENGEMUDI
+================================================== */
+.driverSeat{
+    position:absolute;
+    left:1.5%;
+    bottom:0;
+    width:190px;
+    height:310px;
+    z-index:55;
+    pointer-events:none;
+}
+
+.driverSeatBack{
+    position:absolute;
+    right:25px;
+    bottom:0;
+    width:135px;
+    height:255px;
+    background:linear-gradient(
+        90deg,
+        #202225,
+        #42464a,
+        #242629
+    );
+    border-radius:32px 32px 16px 16px;
+    box-shadow:
+        inset 5px 0 8px rgba(255,255,255,.05),
+        8px 10px 18px rgba(0,0,0,.45);
+    z-index:1;
+}
+
+.driverHeadRest{
+    position:absolute;
+    left:58px;
+    top:0;
+    width:70px;
+    height:85px;
+    background:#303337;
+    border-radius:28px 28px 17px 17px;
+    z-index:1;
+}
+
+/* ==================================================
+   SETIR
+================================================== */
+.steering{
+    position:absolute;
+    left:9%;
+    bottom:14%;
+    width:145px;
+    height:145px;
+    border:12px solid #18191b;
+    border-radius:50%;
+    z-index:2;
+    transform:rotate(0deg);
+    transition:transform .18s ease-out;
+}
+
+.steering:before{
+    content:"";
+    position:absolute;
+    width:22px;
+    height:85px;
+    background:#18191b;
+    left:49px;
+    top:17px;
+    transform:rotate(-35deg);
+    border-radius:10px;
+}
+
+.steering:after{
+    content:"AUTO";
+    position:absolute;
+    width:48px;
+    height:48px;
+    border-radius:50%;
+    background:#292b2e;
+    color:#72d8ff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:10px;
+    font-weight:bold;
+    left:37px;
+    top:37px;
+}
+
+/* =========================
+   TV TENGAH
+========================= */
+.tv{
+    position:absolute;
+    left:50%;
+    bottom:8%;
+    transform:translateX(-50%);
+    width:350px;
+    height:225px;
+    background:#0c0d0e;
+    border:10px solid #202225;
+    border-radius:15px;
+    box-shadow:0 12px 35px rgba(0,0,0,.7);
+    pointer-events:auto;
+    z-index:100;
+}
+
+.tvScreen{
+    width:100%;
+    height:100%;
+    background:#101d27;
+    color:white;
+    padding:15px;
+    overflow-y:auto;
+    overflow-x:hidden;
+    scrollbar-width:thin;
+}
+
+.tvScreen::-webkit-scrollbar{
+    width:6px;
+}
+
+.tvScreen::-webkit-scrollbar-thumb{
+    background:#52636c;
+    border-radius:10px;
+}
+
+/* ==================================================
+   MAPS RUTE
+================================================== */
+
+.navigationScreen{
+    display:none;
+    position:relative;
+    width:100%;
+    height:100%;
+    padding:0 !important;
+    overflow:hidden !important;
+    background:#dce6d8;
+}
+
+.mapArea{
+    position:absolute;
+    inset:0;
+    overflow:hidden;
+    background:#d8e3d3;
+}
+
+.mapBlock{
+    position:absolute;
+    background:#c5d1bf;
+    border:2px solid #b5c2af;
+    border-radius:5px;
+}
+
+.mapBlock.b1{
+    width:65px;
+    height:42px;
+    left:4%;
+    top:17%;
+}
+
+.mapBlock.b2{
+    width:70px;
+    height:52px;
+    right:5%;
+    top:12%;
+}
+
+.mapBlock.b3{
+    width:65px;
+    height:45px;
+    left:6%;
+    bottom:8%;
+}
+
+.mapBlock.b4{
+    width:70px;
+    height:48px;
+    right:6%;
+    bottom:13%;
+}
+
+.mapBlock.b5{
+    width:45px;
+    height:35px;
+    left:42%;
+    top:12%;
+}
+
+.mapBlock.b6{
+    width:55px;
+    height:40px;
+    left:25%;
+    bottom:10%;
+}
+
+.mapRoad{
+    position:absolute;
+    background:#ffffff;
+    border:2px solid #c5ccc1;
+    border-radius:30px;
+}
+
+.mapRoad.main{
+    width:125%;
+    height:42px;
+    left:-13%;
+    top:49%;
+    transform:rotate(-18deg);
+}
+
+.mapRoad.cross{
+    width:42px;
+    height:125%;
+    left:57%;
+    top:-12%;
+    transform:rotate(18deg);
+}
+
+.mapRoad.small1{
+    width:80%;
+    height:18px;
+    left:2%;
+    top:27%;
+    transform:rotate(8deg);
+}
+
+.mapRoad.small2{
+    width:75%;
+    height:18px;
+    left:19%;
+    top:73%;
+    transform:rotate(-8deg);
+}
+
+.mapRoad.small3{
+    width:60%;
+    height:17px;
+    left:-8%;
+    top:63%;
+    transform:rotate(25deg);
+}
+
+.routeLine{
+    position:absolute;
+    width:9px;
+    height:250px;
+    left:49%;
+    top:-15px;
+    background:#1677e8;
+    border-radius:10px;
+    box-shadow:0 0 3px rgba(0,0,0,.25);
+    transform:rotate(18deg);
+    z-index:10;
+}
+
+.routeHorizontal{
+    position:absolute;
+    width:245px;
+    height:9px;
+    left:18%;
+    top:49%;
+    background:#1677e8;
+    border-radius:10px;
+    transform:rotate(-18deg);
+    z-index:10;
+}
+
+.mapCar{
+    position:absolute;
+    width:24px;
+    height:24px;
+    left:48%;
+    top:78%;
+    background:#1976f3;
+    border:4px solid white;
+    border-radius:50%;
+    box-shadow:0 2px 8px rgba(0,0,0,.4);
+    z-index:30;
+    transition:left .25s ease,top .25s ease;
+}
+
+.mapCar:after{
+    content:"";
+    position:absolute;
+    width:0;
+    height:0;
+    left:50%;
+    top:-9px;
+    transform:translateX(-50%);
+    border-left:5px solid transparent;
+    border-right:5px solid transparent;
+    border-bottom:8px solid #1976f3;
+}
+
+.destinationMarker{
+    position:absolute;
+    right:14%;
+    top:17%;
+    width:30px;
+    height:30px;
+    background:#e53935;
+    border:4px solid white;
+    border-radius:50% 50% 50% 0;
+    transform:rotate(-45deg);
+    z-index:25;
+    box-shadow:0 2px 7px rgba(0,0,0,.35);
+}
+
+.destinationMarker span{
+    position:absolute;
+    transform:rotate(45deg);
+    color:white;
+    font-size:12px;
+    left:5px;
+    top:3px;
+}
+
+.navigationInfo{
+    position:absolute;
+    left:9px;
+    right:9px;
+    top:9px;
+    padding:8px 10px;
+    background:rgba(255,255,255,.96);
+    border-radius:8px;
+    box-shadow:0 2px 8px rgba(0,0,0,.2);
+    z-index:40;
+}
+
+.navigationTitle{
+    font-size:9px;
+    color:#777;
+    margin-bottom:2px;
+}
+
+.navigationDestination{
+    font-size:13px;
+    font-weight:bold;
+    color:#202124;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.navigationStatus{
+    position:absolute;
+    left:9px;
+    bottom:9px;
+    padding:7px 10px;
+    background:rgba(255,255,255,.96);
+    border-radius:8px;
+    font-size:10px;
+    font-weight:bold;
+    color:#1677d2;
+    box-shadow:0 2px 8px rgba(0,0,0,.2);
+    z-index:40;
+}
+
+/* =========================
+   DESTINASI
+========================= */
+.destinationScreen{
+    display:block;
+}
+
+.tvTitle{
+    font-size:14px;
+    font-weight:bold;
+    margin-bottom:10px;
+}
+
+.destination{
+    width:100%;
+    padding:11px;
+    border:none;
+    border-radius:7px;
+    outline:none;
+    font-size:13px;
+    margin-bottom:8px;
+}
+
+.startButton,
+.paymentButton{
+    width:100%;
+    padding:10px;
+    border:none;
+    border-radius:7px;
+    background:#18a85a;
+    color:white;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+.startButton:hover,
+.paymentButton:hover{
+    background:#14934e;
+}
+
+.miniMap{
+    height:45px;
+    margin-top:10px;
+    background:
+        linear-gradient(
+            30deg,
+            transparent 47%,
+            #55aaff 48%,
+            #55aaff 52%,
+            transparent 53%
+        ),
+        linear-gradient(
+            -20deg,
+            transparent 47%,
+            #55aaff 48%,
+            #55aaff 52%,
+            transparent 53%
+        );
+    opacity:.45;
+    border-radius:6px;
+}
+
+/* =========================
+   SAMPAI TUJUAN
+========================= */
+.arrivalScreen{
+    display:none;
+    text-align:center;
+}
+
+.arrivalIcon{
+    font-size:28px;
+    margin-bottom:4px;
+}
+
+.arrivalScreen h3{
+    font-size:16px;
+    margin-bottom:5px;
+}
+
+.arrivalScreen p{
+    font-size:11px;
+    color:#b7c4cc;
+    margin-bottom:10px;
+}
+
+.fare{
+    background:#172b36;
+    border-radius:8px;
+    padding:9px;
+    margin-bottom:9px;
+}
+
+.fareLabel{
+    font-size:9px;
+    color:#9eb0ba;
+}
+
+.fareAmount{
+    font-size:20px;
+    font-weight:bold;
+    margin-top:3px;
+}
+
+/* =========================
+   PEMBAYARAN
+========================= */
+.paymentScreen{
+    display:none;
+    text-align:center;
+    padding-bottom:8px;
+}
+
+.paymentTitle{
+    font-size:14px;
+    font-weight:bold;
+    margin-bottom:4px;
+}
+
+.paymentDestination{
+    font-size:10px;
+    color:#aebbc2;
+    margin-bottom:5px;
+}
+
+.qr{
+    width:82px;
+    height:82px;
+    margin:6px auto;
+    background:
+        repeating-linear-gradient(
+            0deg,
+            #fff 0px,
+            #fff 4px,
+            #111 4px,
+            #111 7px
+        ),
+        repeating-linear-gradient(
+            90deg,
+            transparent 0px,
+            transparent 4px,
+            rgba(0,0,0,.9) 4px,
+            rgba(0,0,0,.9) 7px
+        );
+    border:5px solid white;
+}
+
+.paymentNote{
+    font-size:9px;
+    color:#aebbc2;
+    margin-bottom:6px;
+}
+
+.paymentScreen .fareAmount{
+    font-size:16px;
+    margin-bottom:7px;
+}
+
+/* =========================
+   PEMBAYARAN BERHASIL
+========================= */
+.successScreen{
+    display:none;
+    text-align:center;
+    padding-top:25px;
+}
+
+.successIcon{
+    width:48px;
+    height:48px;
+    border-radius:50%;
+    background:#18a85a;
+    margin:0 auto 9px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:25px;
+}
+
+.successScreen h3{
+    font-size:16px;
+    margin-bottom:5px;
+}
+
+.successScreen p{
+    color:#aebbc2;
+    font-size:11px;
+}
+
+/* ==================================================
+   PENUMPANG
+================================================== */
+.passenger{
+    position:absolute;
+    right:1%;
+    bottom:0;
+    width:195px;
+    height:335px;
+    z-index:70;
+    pointer-events:none;
+}
+
+.seatBack{
+    position:absolute;
+    right:15px;
+    bottom:0;
+    width:145px;
+    height:260px;
+    background:linear-gradient(
+        90deg,
+        #25272a,
+        #4a4d51,
+        #292b2e
+    );
+    border-radius:32px 32px 16px 16px;
+    box-shadow:
+        inset 5px 0 10px rgba(255,255,255,.06),
+        8px 10px 20px rgba(0,0,0,.45);
+    z-index:1;
+}
+
+.headRest{
+    position:absolute;
+    right:52px;
+    top:0;
+    width:72px;
+    height:84px;
+    background:#35383c;
+    border-radius:28px 28px 17px 17px;
+    z-index:1;
+}
+
+.head{
+    position:absolute;
+    right:60px;
+    top:18px;
+    width:56px;
+    height:68px;
+    background:#c98f69;
+    border-radius:50%;
+    z-index:2;
+}
+
+.head:before{
+    content:"";
+    position:absolute;
+    left:-4px;
+    top:-5px;
+    width:64px;
+    height:43px;
+    background:#302020;
+    border-radius:50% 50% 25% 25%;
+}
+
+.head:after{
+    content:"";
+    position:absolute;
+    left:15px;
+    bottom:-9px;
+    width:25px;
+    height:17px;
+    background:#b97e5d;
+    border-radius:0 0 10px 10px;
+}
+
+.body{
+    position:absolute;
+    right:37px;
+    top:93px;
+    width:103px;
+    height:155px;
+    background:#3e78aa;
+    border-radius:38px 38px 18px 18px;
+    z-index:2;
+}
+
+.body:before{
+    content:"";
+    position:absolute;
+    left:-15px;
+    top:3px;
+    width:133px;
+    height:50px;
+    background:#3e78aa;
+    border-radius:50%;
+}
+
+.body:after{
+    content:"";
+    position:absolute;
+    left:49px;
+    top:15px;
+    width:3px;
+    height:125px;
+    background:rgba(0,0,0,.13);
+}
+
+.leg{
+    position:absolute;
+    right:37px;
+    bottom:25px;
+    width:108px;
+    height:70px;
+    background:#25272a;
+    border-radius:22px 22px 8px 8px;
+    z-index:2;
+}
+
+.seatBottom{
+    position:absolute;
+    right:2px;
+    bottom:4px;
+    width:153px;
+    height:48px;
+    background:#292b2e;
+    border-radius:22px;
+    z-index:2;
+}
+
+/* =========================
+   INFO + SPEEDOMETER
+========================= */
+
+.info{
+    position:absolute;
+
+    /*
+       SPEEDOMETER DIPINDAHKAN
+       KE TENGAH SETIR
+    */
+    left:calc(9% + 22px);
+    bottom:calc(14% + 22px);
+
+    width:100px;
+    height:100px;
+
+    background:transparent;
+    color:white;
+
+    padding:0;
+    border-radius:50%;
+
+    /*
+       Lebih tinggi dari setir
+       agar speedometer terlihat
+       di depan setir.
+    */
+    z-index:3;
+
+    display:none;
+}
+
+.status{
+    position:absolute;
+    left:115px;
+    bottom:10px;
+    font-size:11px;
+    color:#6fe69b;
+    white-space:nowrap;
+}
+
+/* =========================
+   SPEEDOMETER
+========================= */
+
+.speedometer{
+    position:absolute;
+    left:20px;
+    top:-50px;
+    width:100px;
+    height:100px;
+}
+
+.speedometerFace{
+    position:relative;
+    width:100px;
+    height:100px;
+    border-radius:50%;
+    background:
+        radial-gradient(
+            circle at center,
+            #24272b 0%,
+            #111315 68%,
+            #08090b 100%
+        );
+    border:4px solid #4b5157;
+    box-shadow:
+        0 4px 12px rgba(0,0,0,.55),
+        inset 0 0 10px rgba(255,255,255,.08);
+    overflow:hidden;
+}
+
+.speedometerFace:before{
+    content:"";
+    position:absolute;
+    inset:8px;
+    border-radius:50%;
+    border:2px solid rgba(255,255,255,.12);
+}
+
+.speedMarks span{
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform:
+        translate(-50%,-50%)
+        rotate(calc(-120deg + var(--i) * 48deg))
+        translateY(-36px)
+        rotate(calc(120deg - var(--i) * 48deg));
+    color:#fff;
+    font-size:7px;
+    font-weight:bold;
+}
+
+.speedNeedle{
+    position:absolute;
+    width:3px;
+    height:34px;
+    left:48px;
+    top:16px;
+    background:#ff3b30;
+    border-radius:3px;
+    transform-origin:50% 34px;
+    transform:rotate(-120deg);
+    transition:transform .2s ease-out;
+    z-index:10;
+    box-shadow:
+        0 0 5px rgba(255,59,48,.8);
+}
+
+.speedCenter{
+    position:absolute;
+    width:10px;
+    height:10px;
+    left:45px;
+    top:45px;
+    background:#ff3b30;
+    border:2px solid #fff;
+    border-radius:50%;
+    z-index:20;
+}
+
+.speedUnit{
+    position:absolute;
+    left:0;
+    right:0;
+    bottom:13px;
+    text-align:center;
+    color:#9da5aa;
+    font-size:7px;
+    letter-spacing:.5px;
+}
+
+/* =========================
+   START SCREEN
+========================= */
+.startScreen{
+    position:absolute;
+    inset:0;
+    background:linear-gradient(
+        135deg,
+        #07131b,
+        #102b3b
+    );
+    z-index:300;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.startCard{
+    width:380px;
+    padding:40px;
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.15);
+    border-radius:22px;
+    text-align:center;
+    color:white;
+}
+
+.startIcon{
+    font-size:65px;
+    margin-bottom:15px;
+}
+
+.startCard h1{
+    font-size:30px;
+    margin-bottom:8px;
+}
+
+.startCard p{
+    color:#b8c8d2;
+    margin-bottom:25px;
+}
+
+.enterButton{
+    border:0;
+    padding:14px 30px;
+    border-radius:10px;
+    background:#18a85a;
+    color:white;
+    font-weight:bold;
+    cursor:pointer;
+    font-size:14px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="game">
+
+    <div class="sky">
+        <div class="cloud c1"></div>
+        <div class="cloud c2"></div>
+        <div class="cloud c3"></div>
+    </div>
+
+    <div class="city">
+        <div class="building"></div>
+        <div class="building"></div>
+        <div class="building"></div>
+        <div class="building"></div>
+        <div class="building"></div>
+        <div class="building"></div>
+        <div class="building"></div>
+        <div class="building"></div>
+        <div class="building"></div>
+    </div>
+
+    <div class="tree tree1"></div>
+    <div class="tree tree2"></div>
+    <div class="tree tree3"></div>
+
+    <div class="sidewalk left"></div>
+    <div class="sidewalk right"></div>
+
+    <div class="sideLine left"></div>
+    <div class="sideLine right"></div>
+
+    <div class="road">
+        <div
+            class="laneContainer"
+            id="laneContainer"
+        ></div>
+    </div>
+
+    <div
+        class="intersection"
+        id="intersection"
+    ></div>
+
+    <div
+        class="zebra"
+        id="zebra"
+    >
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+
+    <div
+        class="traffic"
+        id="traffic"
+    >
+
+        <div class="trafficBox">
+
+            <div
+                class="bulb red"
+                id="red"
+            ></div>
+
+            <div
+                class="bulb yellow"
+                id="yellow"
+            ></div>
+
+            <div
+                class="bulb green active"
+                id="green"
+            ></div>
+
+        </div>
+
+        <div class="trafficPole"></div>
+
+    </div>
+
+    <div
+        class="otherCar"
+        id="otherCar"
+    ></div>
+
+
+    <!-- INFO + SPEEDOMETER -->
+    <div
+        class="info"
+        id="info"
+    >
+
+        <div class="speedometer">
+
+            <div class="speedometerFace">
+
+                <div class="speedMarks">
+
+                    <span style="--i:0">0</span>
+                    <span style="--i:1">20</span>
+                    <span style="--i:2">40</span>
+                    <span style="--i:3">60</span>
+                    <span style="--i:4">80</span>
+                    <span style="--i:5">100</span>
+
+                </div>
+
+                <div
+                    class="speedNeedle"
+                    id="speedNeedle"
+                ></div>
+
+                <div class="speedCenter"></div>
+
+                <div class="speedUnit">
+                    km/h
+                </div>
+
+            </div>
+
+        </div>
+
+        <div
+            class="status"
+            id="status"
+        >
+            Siap berjalan
+        </div>
+
+    </div>
+
+
+    <div class="interior">
+
+        <div class="dashboard"></div>
+
+        <div class="driverSeat">
+
+            <div class="driverSeatBack"></div>
+
+            <div class="driverHeadRest"></div>
+
+        </div>
+
+        <div class="steering"></div>
+
+        <div class="tv">
+
+            <div class="tvScreen">
+
+                <!-- MAPS RUTE -->
+
+                <div
+                    class="navigationScreen"
+                    id="navigationScreen"
+                >
+
+                    <div class="mapArea">
+
+                        <div class="mapRoad main"></div>
+                        <div class="mapRoad cross"></div>
+                        <div class="mapRoad small1"></div>
+                        <div class="mapRoad small2"></div>
+                        <div class="mapRoad small3"></div>
+
+                        <div class="mapBlock b1"></div>
+                        <div class="mapBlock b2"></div>
+                        <div class="mapBlock b3"></div>
+                        <div class="mapBlock b4"></div>
+                        <div class="mapBlock b5"></div>
+                        <div class="mapBlock b6"></div>
+
+                        <div class="routeLine"></div>
+                        <div class="routeHorizontal"></div>
+
+                        <div
+                            class="mapCar"
+                            id="mapCar"
+                        ></div>
+
+                        <div class="destinationMarker">
+                            <span>●</span>
+                        </div>
+
+                    </div>
+
+                    <div class="navigationInfo">
+
+                        <div class="navigationTitle">
+                            RUTE PERJALANAN
+                        </div>
+
+                        <div
+                            class="navigationDestination"
+                            id="navigationDestination"
+                        >
+                            Tujuan
+                        </div>
+
+                    </div>
+
+                    <div
+                        class="navigationStatus"
+                        id="navigationStatus"
+                    >
+                        ● Berjalan
+                    </div>
+
+                </div>
+
+
+                <div
+                    class="destinationScreen"
+                    id="destinationScreen"
+                >
+
+                    <div class="tvTitle">
+                        DESTINASI PERJALANAN
+                    </div>
+
+                    <input
+                        type="text"
+                        id="destination"
+                        class="destination"
+                        placeholder="Masukkan tujuan..."
+                        autocomplete="off"
+                    >
+
+                    <button
+                        class="startButton"
+                        onclick="startTrip()"
+                    >
+                        MULAI PERJALANAN
+                    </button>
+
+                    <div class="miniMap"></div>
+
+                </div>
+
+
+                <div
+                    class="arrivalScreen"
+                    id="arrivalScreen"
+                >
+
+                    <div class="arrivalIcon">
+                        📍
+                    </div>
+
+                    <h3>
+                        Anda telah sampai
+                    </h3>
+
+                    <p id="arrivalDestination">
+                        Tujuan
+                    </p>
+
+                    <div class="fare">
+
+                        <div class="fareLabel">
+                            TOTAL PEMBAYARAN
+                        </div>
+
+                        <div class="fareAmount">
+                            Rp25.000
+                        </div>
+
+                    </div>
+
+                    <button
+                        class="paymentButton"
+                        onclick="showPayment()"
+                    >
+                        LANJUT KE PEMBAYARAN
+                    </button>
+
+                </div>
+
+
+                <div
+                    class="paymentScreen"
+                    id="paymentScreen"
+                >
+
+                    <div class="paymentTitle">
+                        PEMBAYARAN PERJALANAN
+                    </div>
+
+                    <div
+                        class="paymentDestination"
+                        id="paymentDestination"
+                    >
+                        -
+                    </div>
+
+                    <div class="qr"></div>
+
+                    <div class="paymentNote">
+                        Scan QR untuk pembayaran
+                    </div>
+
+                    <div class="fareAmount">
+                        Rp25.000
+                    </div>
+
+                    <button
+                        class="paymentButton"
+                        onclick="paymentSuccess()"
+                    >
+                        BAYAR SEKARANG
+                    </button>
+
+                </div>
+
+
+                <div
+                    class="successScreen"
+                    id="successScreen"
+                >
+
+                    <div class="successIcon">
+                        ✓
+                    </div>
+
+                    <h3>
+                        Pembayaran Berhasil
+                    </h3>
+
+                    <p>
+                        Perjalanan telah selesai.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="passenger">
+
+            <div class="seatBack"></div>
+
+            <div class="headRest"></div>
+
+            <div class="head"></div>
+
+            <div class="body"></div>
+
+            <div class="leg"></div>
+
+            <div class="seatBottom"></div>
+
+        </div>
+
+    </div>
+
+
+    <div
+        class="startScreen"
+        id="startScreen"
+    >
+
+        <div class="startCard">
+
+            <div class="startIcon">
+                🚘
+            </div>
+
+            <h1>
+                Driverless Car
+            </h1>
+
+            <p>
+                Simulasi kendaraan tanpa pengemudi
+            </p>
+
+            <button
+                class="enterButton"
+                onclick="enterCar()"
+            >
+                MASUK KENDARAAN
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* =========================
+   VARIABEL
+========================= */
+
+let running = false;
+let speed = 0;
+let targetSpeed = 42;
+let distance = 0;
+
+let lightState = "green";
+let lightTimer = 6;
+
+let stopped = false;
+let intersectionPassed = false;
+
+let lastTime = 0;
+let laneOffset = 0;
+
+
+/* =========================
+   MASUK MOBIL
+========================= */
+
+function enterCar(){
+
+    document.getElementById(
+        "startScreen"
+    ).style.display = "none";
+
+}
+
+
+/* =========================
+   MULAI PERJALANAN
+========================= */
+
+function startTrip(){
+
+    const destination =
+        document.getElementById(
+            "destination"
+        ).value.trim();
+
+    if(!destination){
+
+        alert(
+            "Silakan masukkan tujuan terlebih dahulu."
+        );
+
+        return;
+    }
+
+    document.getElementById(
+        "info"
+    ).style.display = "block";
+
+
+    document.getElementById(
+        "destinationScreen"
+    ).style.display = "none";
+
+    document.getElementById(
+        "navigationScreen"
+    ).style.display = "block";
+
+    document.getElementById(
+        "navigationDestination"
+    ).textContent = destination;
+
+    document.getElementById(
+        "navigationStatus"
+    ).textContent = "● Berjalan";
+
+
+    running = true;
+
+    speed = 0;
+    targetSpeed = 42;
+    distance = 0;
+
+    lightState = "green";
+    lightTimer = 6;
+
+    stopped = false;
+    intersectionPassed = false;
+
+
+    document.querySelector(
+        ".steering"
+    ).style.transform = "rotate(0deg)";
+
+
+    updateSpeedometer();
+
+    lastTime = performance.now();
+
+    updateMapPosition();
+
+    requestAnimationFrame(gameLoop);
+}
+
+
+/* ENTER UNTUK MULAI */
+
+document
+    .getElementById("destination")
+    .addEventListener(
+        "keydown",
+        function(e){
+
+            if(e.key === "Enter"){
+                startTrip();
+            }
+
+        }
+    );
+
+
+/* =========================
+   LAMPU
+========================= */
+
+function updateLight(dt){
+
+    lightTimer -= dt;
+
+    if(lightTimer <= 0){
+
+        if(lightState === "green"){
+
+            lightState = "yellow";
+            lightTimer = 2;
+
+        }
+
+        else if(lightState === "yellow"){
+
+            lightState = "red";
+            lightTimer = 6;
+
+        }
+
+        else{
+
+            lightState = "green";
+            lightTimer = 7;
+
+        }
+
+    }
+
+    document
+        .getElementById("red")
+        .classList
+        .toggle(
+            "active",
+            lightState === "red"
+        );
+
+    document
+        .getElementById("yellow")
+        .classList
+        .toggle(
+            "active",
+            lightState === "yellow"
+        );
+
+    document
+        .getElementById("green")
+        .classList
+        .toggle(
+            "active",
+            lightState === "green"
+        );
+}
+
+
+/* =========================
+   JALAN BERGERAK
+========================= */
+
+function moveRoad(dt){
+
+    laneOffset +=
+        speed * dt * 2.3;
+
+    if(laneOffset > 110)
+        laneOffset = 0;
+
+    const container =
+        document.getElementById(
+            "laneContainer"
+        );
+
+    container.innerHTML = "";
+
+    for(let i=0;i<9;i++){
+
+        const lane =
+            document.createElement("div");
+
+        lane.className = "lane";
+
+        let y =
+            ((i * 120 + laneOffset) % 1080) - 120;
+
+        let scale =
+            0.25 +
+            Math.max(0,y) / 850;
+
+        let opacity =
+            Math.min(
+                1,
+                Math.max(.25,y/400)
+            );
+
+        lane.style.top =
+            y + "px";
+
+        lane.style.transform =
+            `translateX(-50%) scale(${scale})`;
+
+        lane.style.opacity =
+            opacity;
+
+        container.appendChild(lane);
+
+    }
+}
+
+
+/* =========================
+   PERSIMPANGAN
+========================= */
+
+function updateIntersection(){
+
+    const visible =
+        distance >= 330 &&
+        distance <= 600;
+
+    document.getElementById(
+        "intersection"
+    ).style.opacity =
+        visible ? "1" : "0";
+
+    document.getElementById(
+        "traffic"
+    ).style.opacity =
+        visible ? "1" : "0";
+
+    document.getElementById(
+        "zebra"
+    ).style.opacity =
+        visible ? "1" : "0";
+}
+
+
+/* =========================
+   MOBIL LAIN
+========================= */
+
+function moveOtherCar(){
+
+    const car =
+        document.getElementById(
+            "otherCar"
+        );
+
+    if(
+        distance > 250 &&
+        distance < 800
+    ){
+
+        car.style.opacity = "1";
+
+        const y =
+            47 -
+            ((distance - 250) * .025);
+
+        car.style.bottom =
+            Math.max(
+                40,
+                y
+            ) + "%";
+
+    }else{
+
+        car.style.opacity = ".85";
+
+    }
+}
+
+
+/* =========================
+   POSISI MOBIL DI MAPS
+========================= */
+
+function updateMapPosition(){
+
+    const mapCar =
+        document.getElementById(
+            "mapCar"
+        );
+
+    if(!mapCar)
+        return;
+
+
+    if(distance <= 0){
+
+        mapCar.style.left = "48%";
+        mapCar.style.top = "78%";
+
+        return;
+    }
+
+
+    if(distance < 180){
+
+        const progress =
+            distance / 180;
+
+        const left =
+            48 - (progress * 17);
+
+        const top =
+            78 - (progress * 18);
+
+        mapCar.style.left =
+            left + "%";
+
+        mapCar.style.top =
+            top + "%";
+
+    }
+
+
+    else if(distance < 330){
+
+        const progress =
+            (distance - 180) / 150;
+
+        const left =
+            31 + (progress * 18);
+
+        const top =
+            60 - (progress * 23);
+
+        mapCar.style.left =
+            left + "%";
+
+        mapCar.style.top =
+            top + "%";
+
+    }
+
+
+    else if(distance < 520){
+
+        const progress =
+            (distance - 330) / 190;
+
+        const left =
+            49 + (progress * 8);
+
+        const top =
+            37 - (progress * 16);
+
+        mapCar.style.left =
+            left + "%";
+
+        mapCar.style.top =
+            top + "%";
+
+    }
+
+
+    else{
+
+        const progress =
+            Math.min(
+                1,
+                (distance - 520) / 80
+            );
+
+        const left =
+            57 + (progress * 12);
+
+        const top =
+            21 - (progress * 2);
+
+        mapCar.style.left =
+            left + "%";
+
+        mapCar.style.top =
+            top + "%";
+
+    }
+
+}
+
+
+/* =========================
+   GERAKAN SETIR
+========================= */
+
+function updateSteering(){
+
+    const steering =
+        document.querySelector(
+            ".steering"
+        );
+
+    if(!steering)
+        return;
+
+
+    if(speed <= 1){
+
+        steering.style.transform =
+            "rotate(0deg)";
+
+        return;
+    }
+
+
+    const steeringAngle =
+        Math.sin(
+            distance * 0.055
+        ) * 18;
+
+    steering.style.transform =
+        `rotate(${steeringAngle}deg)`;
+
+}
+
+
+/* =========================
+   SPEEDOMETER
+========================= */
+
+function updateSpeedometer(){
+
+    const needle =
+        document.getElementById(
+            "speedNeedle"
+        );
+
+    if(!needle)
+        return;
+
+
+    const maxSpeed = 100;
+
+    const currentSpeed =
+        Math.max(
+            0,
+            Math.min(
+                speed,
+                maxSpeed
+            )
+        );
+
+    const angle =
+        -120 +
+        (currentSpeed / maxSpeed) * 240;
+
+    needle.style.transform =
+        `rotate(${angle}deg)`;
+}
+
+
+/* =========================
+   GAME LOOP
+========================= */
+
+function gameLoop(now){
+
+    if(!running)
+        return;
+
+    const dt =
+        Math.min(
+            (now - lastTime) / 1000,
+            .05
+        );
+
+    lastTime = now;
+
+    updateLight(dt);
+
+    const approachingIntersection =
+        distance >= 390 &&
+        distance <= 520;
+
+
+    if(!approachingIntersection){
+
+        targetSpeed = 42;
+        stopped = false;
+
+    }else{
+
+        if(lightState === "red"){
+
+            targetSpeed = 0;
+
+        }
+        else if(lightState === "yellow"){
+
+            targetSpeed = 17;
+
+        }
+        else{
+
+            targetSpeed = 42;
+
+        }
+    }
+
+
+    /* PERCEPATAN */
+
+    if(speed < targetSpeed){
+
+        speed += 20 * dt;
+
+        if(speed > targetSpeed)
+            speed = targetSpeed;
+
+    }
+
+
+    /* PENGEREMAN */
+
+    else if(speed > targetSpeed){
+
+        speed -= 30 * dt;
+
+        if(speed < targetSpeed)
+            speed = targetSpeed;
+
+    }
+
+
+    /* BERHENTI SAAT MERAH */
+
+    if(
+        approachingIntersection &&
+        lightState === "red" &&
+        speed < 2
+    ){
+
+        speed = 0;
+        stopped = true;
+
+        document.getElementById(
+            "status"
+        ).textContent =
+            "Berhenti — lampu merah";
+
+
+        document.getElementById(
+            "navigationStatus"
+        ).textContent =
+            "● Berhenti — Lampu Merah";
+
+    }
+
+
+    /* HIJAU */
+
+    if(
+        stopped &&
+        lightState === "green"
+    ){
+
+        stopped = false;
+
+        document.getElementById(
+            "status"
+        ).textContent =
+            "Lampu hijau — kendaraan berjalan";
+
+
+        document.getElementById(
+            "navigationStatus"
+        ).textContent =
+            "● Berjalan";
+
+    }
+
+
+    /* JARAK */
+
+    if(!stopped){
+
+        distance +=
+            speed * dt;
+
+    }
+
+
+    updateMapPosition();
+
+
+    /* LEWAT PERSIMPANGAN */
+
+    if(distance > 560){
+
+        intersectionPassed = true;
+
+    }
+
+
+    if(intersectionPassed){
+
+        document.getElementById(
+            "status"
+        ).textContent =
+            "Perjalanan berlangsung";
+
+
+        document.getElementById(
+            "navigationStatus"
+        ).textContent =
+            "● Berjalan";
+
+    }
+
+
+    moveRoad(dt);
+
+    updateIntersection();
+
+    moveOtherCar();
+
+    updateSteering();
+
+    updateSpeedometer();
+
+
+    /* SAMPAI */
+
+    if(distance >= 600){
+
+        finishTrip();
+
+        return;
+
+    }
+
+
+    requestAnimationFrame(gameLoop);
+}
+
+
+/* =========================
+   FINISH TRIP
+========================= */
+
+function finishTrip(){
+
+    running = false;
+
+    speed = 0;
+
+
+    document.querySelector(
+        ".steering"
+    ).style.transform =
+        "rotate(0deg)";
+
+
+    updateSpeedometer();
+
+
+    document.getElementById(
+        "status"
+    ).textContent =
+        "Perjalanan Selesai";
+
+
+    const destination =
+        document.getElementById(
+            "destination"
+        ).value;
+
+
+    document.getElementById(
+        "navigationScreen"
+    ).style.display = "none";
+
+
+    document.getElementById(
+        "destinationScreen"
+    ).style.display = "none";
+
+    document.getElementById(
+        "paymentScreen"
+    ).style.display = "none";
+
+    document.getElementById(
+        "successScreen"
+    ).style.display = "none";
+
+    document.getElementById(
+        "arrivalScreen"
+    ).style.display = "block";
+
+    document.getElementById(
+        "arrivalDestination"
+    ).textContent =
+        "Tujuan: " + destination;
+}
+
+
+/* =========================
+   PEMBAYARAN
+========================= */
+
+function showPayment(){
+
+    const destination =
+        document.getElementById(
+            "destination"
+        ).value;
+
+    document.getElementById(
+        "arrivalScreen"
+    ).style.display = "none";
+
+    document.getElementById(
+        "paymentScreen"
+    ).style.display = "block";
+
+    document.getElementById(
+        "paymentDestination"
+    ).textContent =
+        destination;
+}
+
+
+/* =========================
+   PEMBAYARAN BERHASIL
+========================= */
+
+function paymentSuccess(){
+
+    document.getElementById(
+        "paymentScreen"
+    ).style.display = "none";
+
+    document.getElementById(
+        "successScreen"
+    ).style.display = "block";
+
+
+    setTimeout(function(){
+
+        document.getElementById(
+            "successScreen"
+        ).innerHTML = `
+
+            <div class="successIcon">
+                ✓
+            </div>
+
+            <h3>
+                Perjalanan Selesai
+            </h3>
+
+            <p>
+                Terima kasih telah menggunakan
+                Driverless Car.
+            </p>
+
+        `;
+
+    },1800);
+
+}
+
+</script>
+
+</body>
+</html>
